@@ -1,7 +1,7 @@
-aiofiles
-aiosqlite
-fastapi
-openpyxl
-python-dotenv
-python-multipart
-uvicorn
+aiofiles>=25.1.0
+aiosqlite>=0.22.1
+fastapi>=0.128.0
+openpyxl>=3.1.5
+python-dotenv>=1.1.0
+python-multipart>=0.0.21
+uvicorn>=0.40.0

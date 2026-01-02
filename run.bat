@@ -5,7 +5,7 @@ echo.
 
 REM conda init cmd.exe
 REM 检查并激活 conda 环境
-set CONDA_ENV_PATH=d:\env\共享表格
+set CONDA_ENV_PATH=d:\env\spreadsheet
 
 if exist "%CONDA_ENV_PATH%\python.exe" (
     echo 发现 conda 环境，正在激活...
