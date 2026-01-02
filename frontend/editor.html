@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">加载中...</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- x-spreadsheet 样式 (本地) -->
+    <link rel="stylesheet" href="/static/lib/xspreadsheet.css">
+    <style>
+        /* 电子表格容器 */
+        #spreadsheet-container {
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+
+        /* 在线用户列表 */
+        .online-users-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            min-width: 200px;
+            z-index: 100;
+        }
+
+        .online-users:hover .online-users-list {
+            display: block;
+        }
+
+        .online-user-item {
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .online-user-item .dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+        }
+
+        .online-users {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        /* 协作者选区样式 */
+        .collaborator-selection {
+            position: absolute;
+            border: 2px solid;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .collaborator-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* 修改历史悬浮窗 */
+        .history-panel {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--primary-color);
+            color: white;
+            cursor: move;
+        }
+
+        .history-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .history-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+        }
+
+        .history-content {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item .time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .history-item .user {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .history-item .action {
+            color: #666;
+        }
+
+        .history-item .cell {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 0 4px;
+        }
+
+        .history-item .value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .history-empty {
+            padding: 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .history-panel.collapsed .history-content {
+            display: none;
+        }
+
+        .history-panel.collapsed {
+            max-height: auto;
+        }
+
+        /* 编辑窗口 */
+        .edit-panel {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #28a745;
+            color: white;
+            cursor: move;
+        }
+
+        .edit-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .edit-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+        }
+
+        .edit-content {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .edit-cell-info {
+            font-size: 12px;
+            color: #666;
+            padding: 6px 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .edit-textarea {
+            flex: 1;
+            min-height: 350px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+
+        .edit-textarea:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .edit-panel.collapsed .edit-content {
+            display: none;
+        }
+
+        .edit-panel.collapsed {
+            max-height: auto;
+        }
+
+        /* 完全隐藏工具栏 */
+        .x-spreadsheet-toolbar {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">
+                <img src="/static/lib/logo.png" alt="Logo" style="height: 32px; margin-right: 12px; vertical-align: middle;">
+                <h1 id="systemName" style="display: inline-block; vertical-align: middle;">加载中...</h1>
+                <span class="sheet-name" id="sheetName">加载中...</span>
+            </div>
+            <div class="editor-toolbar">
+                <div class="online-users" id="onlineUsersWrapper">
+                    <span>在线协作:</span>
+                    <span class="online-count" id="onlineCount">1</span>
+                    <div class="online-users-list" id="onlineUsersList"></div>
+                </div>
+                <button class="btn btn-primary btn-sm" id="exportBtn">导出Excel</button>
+                <button class="btn btn-secondary btn-sm" id="logoutBtn">退出</button>
+            </div>
+        </div>
+        <div class="spreadsheet-wrapper">
+            <div id="spreadsheet-container"></div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 修改历史悬浮窗 -->
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h3>修改记录</h3>
+            <button class="history-toggle" id="historyToggle">−</button>
+        </div>
+        <div class="history-content">
+            <ul class="history-list" id="historyList">
+                <li class="history-empty">暂无修改记录</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 编辑窗口 -->
+    <div class="edit-panel" id="editPanel">
+        <div class="edit-header">
+            <h3>单元格编辑</h3>
+            <button class="edit-toggle" id="editToggle">−</button>
+        </div>
+        <div class="edit-content">
+            <div class="edit-cell-info" id="editCellInfo">未选中单元格</div>
+            <textarea class="edit-textarea" id="editTextarea" placeholder="选择一个单元格开始编辑..."></textarea>
+        </div>
+    </div>
+
+    <!-- 版本信息 -->
+    <div class="footer-info" id="footerInfo">加载中...</div>
+
+    <script>
+        // 加载系统配置
+        fetch('/api/config')
+            .then(response => response.json())
+            .then(config => {
+                document.getElementById('pageTitle').textContent = config.systemName + ' - 编辑表格';
+                document.getElementById('systemName').innerHTML = config.systemName;
+                document.getElementById('footerInfo').textContent = 'v1.0 · ' + config.authorInfo;
+            })
+            .catch(error => {
+                console.error('加载配置失败:', error);
+                document.getElementById('pageTitle').textContent = '共享表格 - 编辑表格';
+                document.getElementById('systemName').innerHTML = '共享表格';
+                document.getElementById('footerInfo').textContent = 'v1.0 · 未知作者';
+            });
+    </script>
+
+    <!-- x-spreadsheet 核心 (本地) -->
+    <script src="/static/lib/xspreadsheet.js"></script>
+    <script src="/static/js/editor.js"></script>
+</body>
+</html>

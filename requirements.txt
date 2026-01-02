@@ -1,0 +1,7 @@
+aiofiles
+aiosqlite
+fastapi
+openpyxl
+python-dotenv
+python-multipart
+uvicorn
