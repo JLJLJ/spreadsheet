@@ -26,14 +26,6 @@ echo.
 echo 2. 激活环境并配置中国镜像源
 call conda activate d:\env\spreadsheet
 
-REM 配置 conda 清华源
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-conda config --set show_channel_urls yes
-
 echo.
 echo 3. 配置 pip 清华源
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
@@ -42,24 +34,12 @@ pip config set install.trusted-host pypi.tuna.tsinghua.edu.cn
 echo.
 echo 4. 下载并缓存所有依赖包到本地
 echo 正在下载 Python 依赖包...
-cd /d "%~dp0backend"
 call pip download -r requirements.txt -d d:\env\offline_packages
 
 echo.
 echo 5. 安装依赖到环境
 call pip install --no-index --find-links=d:\env\offline_packages -r requirements.txt
 
-echo.
-echo 6. 安装前端依赖（如果需要）
-cd /d "%~dp0"
-if exist node_modules (
-    echo node_modules 已存在，跳过安装
-) else (
-    echo 正在配置 npm 淘宝镜像...
-    call npm config set registry https://registry.npmmirror.com
-    echo 正在安装前端依赖...
-    call npm install
-)
 
 echo.
 echo ================================================

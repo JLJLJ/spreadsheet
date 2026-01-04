@@ -16,7 +16,6 @@ if exist "%CONDA_ENV_PATH%\python.exe" (
     set PYTHON_CMD=python
 )
 
-cd /d "%~dp0backend"
 
 echo 检查端口8000...
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8000 ^| findstr LISTENING') do (
@@ -33,6 +32,8 @@ if exist d:\env\offline_packages (
     echo 在线安装依赖...
     %PYTHON_CMD% -m pip install -r requirements.txt -q
 )
+
+cd /d "%~dp0backend"
 
 REM 读取.env配置
 set SERVER_IP=NONE
