@@ -3,6 +3,17 @@ chcp 65001 >nul
 
 echo.
 
+REM 检查并创建.env文件
+if not exist "%~dp0.env" (
+    if exist "%~dp0.env.example" (
+        echo 正在从.env.example创建.env文件...
+        copy "%~dp0.env.example" "%~dp0.env" >nul
+        echo .env文件创建成功！
+    ) else (
+        echo 警告: .env.example文件不存在，跳过创建.env文件
+    )
+)
+
 REM conda init cmd.exe
 REM 检查并激活 conda 环境
 set CONDA_ENV_PATH=d:\env\spreadsheet
